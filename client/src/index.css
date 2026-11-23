@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root { height: 100%; }
+body {
+  @apply bg-cream text-ink antialiased;
+  background-image: radial-gradient(rgba(30, 27, 43, 0.06) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+h1 { @apply font-display tracking-tight; }
+.font-serif h1 { font-family: inherit; }
+:focus-visible { @apply outline-none ring-[3px] ring-accent-strong ring-offset-2 ring-offset-cream; }
+kbd { @apply rounded border border-ink bg-paper px-1 font-sans text-[10px] font-bold text-ink; }
+::selection { @apply bg-accent-soft text-ink; }
+
+/* Soft brutalism: any 2px-bordered chrome element gets rounded corners unless it sets its own radius. */
+@layer components {
+  .border-2, .border { border-radius: 10px; }
+}
+
+input:not([type=checkbox]):not([type=file]), textarea, select {
+  @apply rounded-lg border-2 border-ink bg-paper text-ink;
+}
+input:not([type=checkbox]):not([type=file]):focus, textarea:focus, select:focus {
+  @apply border-accent-strong outline-none ring-0;
+}
+input[type=checkbox] { @apply h-4 w-4 accent-accent-strong; }
