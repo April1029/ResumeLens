@@ -1,4 +1,4 @@
-# ResumeLens Demo Scenario (draft v1)
+# ResumeLens Demo Scenario (draft v2)
 
 Every prototype screen and every usability-test task runs on this one scenario. The person, the companies and all details are made up.
 
@@ -14,7 +14,7 @@ Every prototype screen and every usability-test task runs on this one scenario. 
 
 ## 1b. First-time onboarding
 
-**Flow:** Welcome + upload → Parsing → Review facts → Add detail (optional) → Paste job posting → Tailor workspace.
+**Flow:** Welcome + upload → Parsing → Review facts → Add detail (optional) → Job posting → Check requirements → Tailor workspace.
 Returning users land on **Profile** and start from "New tailoring."
 
 ### Step 1: Welcome + upload
@@ -55,13 +55,29 @@ Targeted questions about facts that look thin. Each one has a text box and **Ski
 | Q4 | "Any projects, hackathons or course projects not on your resume?" | "StudySpot at a hackathon (React map + Flask API); a Unix shell in C for OS class." | P5, C2 project |
 | Q5 | "Did you review code or work through pull requests on any team project?" | "Yes, we reviewed each other's PRs on ClubHub and in SE class." | P1.d, C4 details |
 
-Footer actions: **Continue to tailoring** and "I'll add more later." Both go to step 5. The fact bank stays editable in Profile.
+Intro: "Optional, about 2 minutes. You answer once; every future application can use these facts. Skip now and we'll ask when a posting needs one."
+A **Skip for now →** button sits at the top, next to the heading, so skipping doesn't mean scrolling past every question. The footer also has **Continue to tailoring** and "I'll add more later." All three go to step 5. The fact bank stays editable in Profile.
 
-### Step 5: Paste job posting
-- Fields: job link (optional, saved for the Applications log), posting text (required), company and role (pre-filled from the text, editable).
-- Note under the link field: "Many job sites block automatic reading, so paste the posting text too."
+### Step 5: Job posting
+One box: **"Paste a job link, or the posting text."** The link is always saved with the application for the Applications log. What happens next depends on what was pasted:
+
+| Input | What happens | Demo button |
+|---|---|---|
+| Link from a readable job board (Greenhouse, Lever, Ashby) | "Reading the job posting" log: opening the site → company and role → requirements streamed in one by one. Goes to step 6. | **Demo: Greenhouse link** |
+| Link from a site known to block reading (LinkedIn, Indeed, Handshake, Glassdoor) | No fetch is attempted. A calm dashed box appears immediately: "LinkedIn doesn't let us read postings directly. Paste the text below instead; it takes about 10 seconds. We'll keep the link with this application." It shows **Open the posting ↗**, "Press ⌘A then ⌘C," and a paste box with the cursor already in it. | **Demo: LinkedIn link**, then **Demo: paste the page** |
+| Any other link | Tries for about 2 seconds, then the same box: "We couldn't read careers.acme-robotics.com. Some sites block automatic reading." | Type any other link |
+| Pasted text | Goes straight to reading; messy text (menus, footers) is fine. | **Demo: paste text** |
+
+The failure is never framed as the user's fault, and it never uses the red flag style. In the prototype, every posting reads as the Lumen Labs sample.
+
+### Step 6: Check requirements
+"Check what we found. Found 6 required and 5 nice-to-have. Fix anything we misread; the evidence map is built from this list."
+- Company and role are filled in and editable.
+- Each requirement can be switched between **Required** and **Nice to have**, or removed with ✕ ("Restore removed" undoes it).
 - Start from: **Master ▾** (or a role version).
-- Button: **Analyze posting** → analyzing progress → Tailor workspace.
+- **Looks right, compare** → analyzing log → Tailor workspace.
+
+These edits carry into the workspace: a removed requirement and its suggestions don't appear on the evidence map, and switching required/nice changes the order and the counts.
 
 ---
 
@@ -130,7 +146,7 @@ Each fact has an ID, a short title, details, and whether it appears on the maste
 
 ## 3. Target posting
 
-**Lumen Labs: Software Engineering Intern, Summer 2027** (link saved for reference; the text is pasted in)
+**Lumen Labs: Software Engineering Intern, Summer 2027** (read from the demo Greenhouse link, or pasted in through the fallback)
 
 > We're looking for an intern to join our platform team and help build the APIs behind our scheduling product.
 >
@@ -165,11 +181,11 @@ Each requirement gets one of four states. The UI shows each state as an icon and
 | R1 | Python or Java | Required | ● | E1, P3, P4 | none needed |
 | R2 | REST APIs | Required | ◐ | P1 says "made a web app"; P1.a has the detail | S-1 |
 | R3 | SQL / relational DBs | Required | ● | P1, P4 | none needed |
-| R4 | Automated tests | Required | ● | P1.b | S-8 (adds pytest to skills) |
+| R4 | Automated tests | Required | ● | P1.b | S-10 (adds a test count) |
 | R5 | Git + merge request review (GitLab) | Required | ◐ | Git listed; P1.d and C4 have the review detail; GitHub ≈ GitLab | S-6 |
 | R6 | Explain technical ideas | Required | ◐ | E1 says "helped students" | S-4 |
 | R7 | Docker | Nice | ● | P1.e | none needed |
-| R8 | CI/CD (GitLab CI) | Nice | ◐ | GitHub Actions is equivalent | S-3 |
+| R8 | CI/CD (GitLab CI) | Nice | ◐ | GitHub Actions is equivalent | S-3, S-8 |
 | R9 | React | Nice | ◆ | P5 hackathon | S-5 |
 | R10 | AWS / cloud | Nice | ○ | — | Gap G-1 |
 | R11 | Kubernetes | Nice | ○ | — | Gap G-2 |
@@ -183,7 +199,7 @@ It is framed as next steps, with no percentage, and it starts with what Jordan a
 
 Each card shows: the requirement, the source fact(s), current text, suggested text, why it helps, a flag if there is one, and Accept / Edit / Skip.
 
-**Risk** decides batch behavior. Only *low* cards with no flag can be accepted with "Accept all low-risk." Flagged cards always need their own decision, and accepting one asks: "Could you explain this in an interview?"
+**Kind** decides batch behavior. Only *Wording only* cards with no flag and no placeholder can be accepted with "Accept N low-risk." Flagged cards always need their own decision, and accepting one asks: "Could you explain this in an interview?"
 
 | ID | Req | Source | Current | Suggested | Why | Flag | Risk |
 |---|---|---|---|---|---|---|---|
@@ -194,14 +210,15 @@ Each card shows: the requirement, the source fact(s), current text, suggested te
 | S-5 | R9 | P5 | Pathfinder Visualizer project block | Swap in **StudySpot**: "Built a React map view of open study rooms and connected it to a Flask API (24-hour hackathon, team of 3)" | React is nice-to-have; Pathfinder doesn't match anything in this posting. Swapping keeps the resume on one page. | ◆ from bank | normal |
 | S-6 | R5 | P1.d, C4 | (no bullet) | Add to ClubHub: "Reviewed teammates' pull requests before merge" | Required: code review through merge requests. Pull requests are GitHub's name for the same thing. | ◆ from bank | normal |
 | S-7 | R1 | P3 | "Pulled the city transit feed and texted riders when their bus was five minutes away" | "Built a Python service that sent real-time bus alerts to **hundreds of riders**" | Shows scale. | ⚠ **Number not in your facts:** P3 says 6 users. Safer option: "Built a Python service using the Twilio API to text bus arrival alerts" | normal |
-| S-8 | R2, R8 | P1, P1.a | Skills line | "Tools: Git, GitHub Actions (CI/CD), Docker, PostgreSQL, Linux, Flask, REST APIs" | Matches posting terms, and each one has a fact behind it. | none | low |
+| S-8 | R8, R2 | P1 | "Tools: Git, GitHub Actions, Docker, PostgreSQL, Linux" | "Tools: Git, GitHub Actions (CI/CD), Flask, Docker, PostgreSQL, Linux" | Matches posting terms, and each one has a fact behind it. | none | low |
 | S-9 | R10 | P1.f | (no bullet) | Add to ClubHub: "Deployed the app to AWS EC2 using Docker Compose" | Only appears after the chat in section 7 creates P1.f. | ◆ from bank | normal |
-
 | S-10 | R4 | P1 | "Wrote unit tests for the backend" | "Wrote **[number]** unit tests covering the Flask backend's API endpoints" | A count is easier to discuss in an interview. Accept stays blocked until the placeholder is filled in or removed. | none | normal |
 
 **Kinds and truth checks.** S-3 and S-8 are **Wording only**; only these can be accepted in bulk. Every other card is **Adds detail**. Unflagged "Adds detail" cards (S-1, S-4, S-5, S-6, S-9) carry a yes/no question that must be ticked before Accept works, for example S-6: "Did you review teammates' pull requests on ClubHub?" Confirmed answers, filled-in placeholders and flags the user kept are listed under **Be ready to explain** on the Summary.
 
 **Make room (one-page fit).** The resume is measured on a fixed Letter-size page (12px ≈ 11pt type, 0.5in margins). The master fits with about 2 lines to spare and the screen says "You're good." Accepting every suggestion except the StudySpot swap still fits; adding the AWS line from the chat (S-9) pushes it over by about 1 line, which is when **Make room** appears. Hiding one line brings it back to "You're good." Lines the user can hide from this copy only: a4 soccer captain, a3 volunteer tutor, e2b2 password resets, e2b3 issue logging, p2b2 animation speed.
+
+**Summary screen.** After the counts (accepted, edited, skipped), a reuse line shows what the fact bank saved this time, calculated from the session. In the standard demo run: "♻ Reused from your fact bank: 2 facts, including 1 detail you added once and didn't have to explain again. 2 new facts saved, ready for your next application. 2 wording-only changes needed no extra check." Below it: **Be ready to explain**, What changed, and save/copy/download.
 
 S-2 and S-7 are the deliberate traps for usability testing: the "supported → led" case from P5's concept probe and an invented metric. We can measure whether participants catch them.
 
@@ -253,4 +270,5 @@ Caption: "Based on 3 applications. This is a record of what happened, not a pred
 - [ ] Are the `BANK ONLY` facts realistic for Jordan?
 - [ ] Is the Lumen Labs posting realistic? Should it have more or fewer requirements?
 - [ ] Do we want a second, harder posting (an ML role with weak fit) to test the low-coverage framing?
+- [ ] Accounts or local-first? The step 1 privacy line assumes accounts. If we go local-first (data stays in the browser, with Export / Import as backup), it should change to something like "Your resume and facts stay in this browser."
 - [ ] Usability tasks to draft from this: (1) review all cards, (2) handle the AWS gap, (3) find which version got an interview.
