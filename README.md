@@ -54,16 +54,17 @@ Key findings:
 The prototype follows the concept and adds what we learned while building it:
 
 - **Fact bank (Profile).** Upload a resume once; it's parsed into facts (courses, roles, projects, skills) you can confirm and add to. Every suggestion has to cite a fact, so the tool can also suggest real experience that isn't on your resume yet.
+- **Job posting.** Paste a link or the posting text into one box. Links from readable job boards are read automatically; sites that block reading (like LinkedIn) fall back to pasting in place, and the link is still saved. You check the extracted requirements (switch required / nice-to-have, remove misreads) before anything is compared.
 - **Tailor workspace.** Your resume on the left; the **evidence map** on the right. Each requirement is marked *On resume*, *Could be clearer*, *In your bank*, or *No evidence yet*, and opens into its suggestion card.
 - **Review cards** show the exact words that change, the fact behind them, and why. "Adds detail" cards ask a yes/no truth check before you can accept; `[placeholders]` must be filled in or removed; wording that goes beyond your facts gets a red flag and a safer alternative.
 - **Gaps** offer three options: reframe a related skill, add a real experience (through a short chat that saves it as a fact), or plan to learn it. ResumeLens never writes in a skill you don't have.
 - **One-page fit.** The copy is measured on a real Letter page; if it runs over, **Make room** suggests the lines that earn the least space for this posting.
-- **Summary and Applications.** See what changed, what you'll need to **be ready to explain** in an interview, and log which version you sent where and what happened.
+- **Summary and Applications.** See what changed, what you'll need to **be ready to explain** in an interview, and log which version you sent where and what happened. The Summary also shows what the fact bank saved you: facts reused and new facts saved for next time.
 
 Design notes: [`docs/design-system.md`](docs/design-system.md) (visual rules and how they map to UI principles) · [`docs/demo-scenario.md`](docs/demo-scenario.md) (the scripted demo data).
 
 ### Running the prototype
-The prototype is a React + TypeScript + Tailwind app in [`client/`](client/). It runs on the scripted demo scenario (no backend or AI calls yet).
+The prototype is a React + TypeScript + Tailwind app in [`client/`](client/). It runs on the scripted demo scenario (no backend or AI calls yet): any resume or posting you enter reads as the Jordan Lee / Lumen Labs sample, and data is kept in memory only, so refreshing the page starts over.
 
 ```bash
 cd client
@@ -77,5 +78,6 @@ Use **Reset demo** (top right) to start over, or "skip setup and open as a retur
 
 ## Next Steps
 - Node.js + Express backend with a language-model API for real parsing and analysis, keeping the "no invented facts" rules in the prompt and validating every returned reference.
-- Saved accounts and data (PostgreSQL), with deletion and minimal data sent to the AI provider.
+- Saving data: either accounts with PostgreSQL, or local-first (data stays in the browser, with Export / Import as backup). To be decided by the team.
+- A browser extension that captures a posting from any site, including login-only ones, and hands it to ResumeLens.
 - Usability testing with think-aloud tasks: review all suggestions, handle a gap, and find which resume version led to an interview.
