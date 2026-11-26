@@ -262,12 +262,14 @@ function AddDetail() {
 
   return (
     <div>
-      <div className="mb-5">
-        <h1 className="text-2xl font-semibold tracking-tight">A few details your resume doesn’t show</h1>
-        <p className="mt-1 text-slate-600">
-          Optional. Answers become facts in your bank, so we can suggest them later, even when they’re not on your resume. Skip anything; you can add more
-          anytime, including while tailoring.
-        </p>
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <div className="max-w-xl">
+          <h1 className="text-2xl font-semibold tracking-tight">A few details your resume doesn’t show</h1>
+          <p className="mt-1 text-slate-600">
+            Optional, about 2 minutes. You answer once; every future application can use these facts. Skip now and we’ll ask when a posting needs one.
+          </p>
+        </div>
+        <Button onClick={() => dispatch({ type: 'finishOnboarding' })}>Skip for now →</Button>
       </div>
       <div className="space-y-3">
         {DETAIL_QUESTIONS.map((q) => {

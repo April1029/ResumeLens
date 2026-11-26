@@ -143,6 +143,8 @@ export interface Session {
   link: string;
   postingText: string;
   baseVersionId: string;
+  /** Requirements as the user confirmed them before analysis. */
+  requirements?: Requirement[];
   decisions: Record<string, Decision>;
   extraSuggestions: Suggestion[];
   /** Bullets hidden from this copy only ("Make room"). */
