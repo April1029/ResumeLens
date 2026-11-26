@@ -37,18 +37,21 @@ function Workspace() {
   const { state, dispatch } = useStore();
   const session = state.session!;
   const base = state.versions.find((v) => v.id === session.baseVersionId) ?? state.versions[0];
+  // Requirements as the user confirmed them on the posting check (removed ones are gone, required/nice may be switched).
+  const reqs = session.requirements ?? REQUIREMENTS;
 
   const suggestions = useMemo(
-    () => availableSuggestions([...SUGGESTIONS, ...session.extraSuggestions], state.facts),
-    [session.extraSuggestions, state.facts],
+    () =>
+      availableSuggestions([...SUGGESTIONS, ...session.extraSuggestions], state.facts).filter((s) => reqs.some((r) => r.id === primaryOf(s))),
+    [session.extraSuggestions, state.facts, reqs],
   );
   const decisions = session.decisions;
   const tailored = useMemo(() => applyDecisions(base.doc, suggestions, decisions, session.hidden), [base.doc, suggestions, decisions, session.hidden]);
   const states = useMemo(() => {
     const m: Record<string, EvidenceState> = {};
-    for (const r of REQUIREMENTS) m[r.id] = reqState(r, state.facts, decisions);
+    for (const r of reqs) m[r.id] = reqState(r, state.facts, decisions);
     return m;
-  }, [state.facts, decisions]);
+  }, [reqs, state.facts, decisions]);
 
   const isPending = (s: Suggestion) => !decisions[s.id] || decisions[s.id].status === 'pending';
   const isApplied = (s: Suggestion) => !isPending(s) && decisions[s.id].status !== 'skipped';
@@ -59,9 +62,9 @@ function Workspace() {
   const RANK: Record<EvidenceState, number> = { clearer: 0, bank: 1, none: 2, on: 3 };
   const decideOrder = (a: Requirement, b: Requirement) => requiredFirst(a, b) || RANK[states[a.id]] - RANK[states[b.id]];
   const groups: Record<Group, Requirement[]> = {
-    decide: REQUIREMENTS.filter((r) => groupOf(r) === 'decide').sort(decideOrder),
-    explore: REQUIREMENTS.filter((r) => groupOf(r) === 'explore').sort(requiredFirst),
-    covered: REQUIREMENTS.filter((r) => groupOf(r) === 'covered').sort(requiredFirst),
+    decide: reqs.filter((r) => groupOf(r) === 'decide').sort(decideOrder),
+    explore: reqs.filter((r) => groupOf(r) === 'explore').sort(requiredFirst),
+    covered: reqs.filter((r) => groupOf(r) === 'covered').sort(requiredFirst),
   };
   // Display order of every suggestion, used for ←/→ and auto-advance.
   const ordered = [...groups.decide, ...groups.explore, ...groups.covered].flatMap((r) => rowSugs(r.id));
@@ -80,7 +83,7 @@ function Workspace() {
   const keys = useRef<{ accept: () => void; edit: () => void; skip: () => void } | null>(null);
   const registerKeys = useCallback((h: typeof keys.current) => (keys.current = h), []);
 
-  const openRow = REQUIREMENTS.find((r) => r.id === openReq);
+  const openRow = reqs.find((r) => r.id === openReq);
   const openList = openReq ? rowSugs(openReq) : [];
   const active = openList.find((s) => s.id === activeSid) ?? openList.find(isPending) ?? openList[0];
 
@@ -112,7 +115,7 @@ function Workspace() {
     const rid = primaryOf(s);
     setOpenReq(rid);
     setActiveSid(s.id);
-    const r = REQUIREMENTS.find((x) => x.id === rid);
+    const r = reqs.find((x) => x.id === rid);
     if (r && groupOf(r) === 'covered') setGroupOpen((g) => ({ ...g, covered: true }));
   };
 
@@ -211,7 +214,7 @@ function Workspace() {
 
   const decidedCount = suggestions.filter((s) => !isPending(s)).length;
   const lowRisk = suggestions.filter((s) => isPending(s) && s.kind === 'wording' && !s.flag && !hasPlaceholder(s.suggested));
-  const required = REQUIREMENTS.filter((r) => r.type === 'required');
+  const required = reqs.filter((r) => r.type === 'required');
   const reqWithEvidence = required.filter((r) => states[r.id] !== 'none').length;
   const pendingCount = suggestions.length - decidedCount;
 
@@ -238,7 +241,7 @@ function Workspace() {
           onNext={() => setActiveSid(list[(i + 1) % list.length].id)}
           primaryReqId={r.id}
           facts={state.facts}
-          reqs={REQUIREMENTS}
+          reqs={reqs}
           onDecide={(d) => decide(active, d)}
           onUndo={() => dispatch({ type: 'decide', id: active.id, decision: { status: 'pending' } })}
           registerKeys={registerKeys}

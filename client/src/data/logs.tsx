@@ -2,7 +2,7 @@
 import type { LogStep } from '../components/LiveLog';
 import { EVIDENCE, EvidenceSwatch } from '../components/ui';
 import { availableSuggestions, reqState } from '../lib/resume';
-import type { Fact } from '../types';
+import type { Fact, Requirement } from '../types';
 import { POSTING, REQUIREMENTS, SUGGESTIONS } from './demo';
 
 export const PARSE_LOG: LogStep[] = [
@@ -14,28 +14,18 @@ export const PARSE_LOG: LogStep[] = [
   { label: 'Building your fact bank', done: 'Fact bank ready for you to check', ms: 800 },
 ];
 
-export function analyzeLog(facts: Fact[]): LogStep[] {
-  const required = REQUIREMENTS.filter((r) => r.type === 'required');
-  const nice = REQUIREMENTS.filter((r) => r.type === 'nice');
-  const sugs = availableSuggestions(SUGGESTIONS, facts);
+export function analyzeLog(facts: Fact[], reqs: Requirement[] = REQUIREMENTS): LogStep[] {
+  const sugs = availableSuggestions(SUGGESTIONS, facts).filter((s) => reqs.some((r) => r.id === s.reqIds[0]));
+  const required = reqs.filter((r) => r.type === 'required');
+  const nice = reqs.filter((r) => r.type === 'nice');
   const flagged = sugs.filter((s) => s.flag).length;
   return [
-    { label: 'Reading the posting', done: `Read ${POSTING.company} · ${POSTING.role.split(',')[0]}`, ms: 1000 },
-    {
-      label: 'Pulling out requirements',
-      done: `Found ${required.length} required and ${nice.length} nice-to-have`,
-      ms: 1600,
-      items: REQUIREMENTS.map((r) => (
-        <>
-          {r.short} <span className="text-slate-400">· {r.type === 'required' ? 'required' : 'nice-to-have'}</span>
-        </>
-      )),
-    },
+    { label: 'Loading your checked requirements', done: `${required.length} required and ${nice.length} nice-to-have from ${POSTING.company}`, ms: 700 },
     {
       label: 'Matching each one to your resume and fact bank',
-      done: `Matched all ${REQUIREMENTS.length} requirements`,
+      done: `Matched all ${reqs.length} requirements`,
       ms: 2000,
-      items: REQUIREMENTS.map((r) => {
+      items: reqs.map((r) => {
         const st = reqState(r, facts, {});
         return (
           <span className="inline-flex items-center gap-1.5">

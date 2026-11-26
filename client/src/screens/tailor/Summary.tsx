@@ -3,7 +3,7 @@ import { useStore } from '../../state/store';
 import type { Decision, ResumeDoc, Suggestion } from '../../types';
 import { Button, Card, Chip } from '../../components/ui';
 import { ResumePaper } from '../../components/ResumePaper';
-import { docToText, finalText, hasPlaceholder, isAccepted } from '../../lib/resume';
+import { docToText, factIdsInDoc, finalText, hasPlaceholder, isAccepted } from '../../lib/resume';
 
 interface Props {
   suggestions: Suggestion[];
@@ -23,6 +23,16 @@ export function Summary({ suggestions, decisions, tailored, company, role, link,
   const pending = suggestions.filter((s) => !decisions[s.id] || decisions[s.id].status === 'pending');
   const edited = accepted.filter((s) => decisions[s.id].status === 'edited').length;
   const hiddenCount = state.session?.hidden.length ?? 0;
+
+  // Show the payoff of the fact bank: facts this copy drew on, and how many you'd otherwise have to re-explain.
+  const baseDoc = state.versions.find((v) => v.id === state.session?.baseVersionId)?.doc;
+  const onBase = baseDoc ? factIdsInDoc(baseDoc) : new Set<string>();
+  const cited = [...new Set(accepted.flatMap((s) => s.sources))];
+  const citedFacts = state.facts.filter((f) => cited.includes(f.id));
+  const addedByYou = citedFacts.filter((f) => f.origin === 'user').length;
+  const offResume = citedFacts.filter((f) => f.origin === 'resume' && !onBase.has(f.id)).length;
+  const savedNow = accepted.filter((s) => decisions[s.id].savedFact).length + (state.session?.extraSuggestions.length ?? 0);
+  const quickAccepts = accepted.filter((s) => s.kind === 'wording' && !s.flag && decisions[s.id].status === 'accepted').length;
 
   // Every accepted line that claims more than the resume used to say. You'll answer for these in an interview.
   const explain = accepted.flatMap((s) => {
@@ -93,6 +103,16 @@ export function Summary({ suggestions, decisions, tailored, company, role, link,
             </Card>
           ))}
         </div>
+
+        {citedFacts.length > 0 && (
+          <Card className="p-3 text-sm">
+            <span className="font-bold">♻ Reused from your fact bank:</span> {citedFacts.length} fact{citedFacts.length === 1 ? '' : 's'}
+            {addedByYou > 0 && <>, including {addedByYou} detail{addedByYou === 1 ? '' : 's'} you added once and didn’t have to explain again</>}
+            {offResume > 0 && <> and {offResume} that weren’t on your resume</>}.
+            {savedNow > 0 && <> {savedNow} new fact{savedNow === 1 ? '' : 's'} saved, ready for your next application.</>}
+            {quickAccepts > 0 && <span className="text-slate-600"> {quickAccepts} wording-only change{quickAccepts === 1 ? '' : 's'} needed no extra check.</span>}
+          </Card>
+        )}
 
         {pending.length > 0 && (
           <div className="rounded-xl border-2 border-ink bg-accent-soft p-3 text-sm font-medium">
